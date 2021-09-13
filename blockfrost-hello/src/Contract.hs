@@ -92,66 +92,7 @@ saysomething = endpoint @"saysomething" $ \something -> do
     lockTx <- submitTxConstraintsWith @Hello lookups' tx'
     void $ awaitTxConfirmed $ txId lockTx
 
-
-
-{--
-    utxos <- utxosAt faddr
-    logInfo @String $ printf "faddr %s" (show faddr)
-    -- faddr Address {addressCredential = ScriptCredential bf2a9c89a7323439d1eff913c0d93dd2a4e9a4040a03a18b8a16bb4c, addressStakingCredential = Nothing}
-    logInfo @String $ printf "utxos %s" (show utxos)
-    -- utxos fromList [(TxOutRef {txOutRefId = 8ddae187b3d0e821cd2597482f1f13ba644151c48ed90fc891a948799eb64435, txOutRefIdx = 1},ScriptChainIndexTxOut {_ciTxOutAddress = Address {addressCredential = ScriptCredential bf2a9c89a7323439d1eff913c0d93dd2a4e9a4040a03a18b8a16bb4c, addressStakingCredential = Nothing}, _ciTxOutValidator = Left bf2a9c89a7323439d1eff913c0d93dd2a4e9a4040a03a18b8a16bb4c, _ciTxOutDatum =  Right (Datum {getDatum = Constr 0 [B "5\222\221)\130\160<\243\158}\206\ETX\200\&9\153O\253\236.\198\176O\FS\242\212\SOa\163"]}), _ciTxOutValue = Value (Map [(,Map [("",66)])])})]
-    let
-        utxos'  = Map.filter (\x -> (_ciTxOutDatum x) == Right (Datum $ PlutusTx.toBuiltinData lu)) utxos
-    let orefs   = fst <$> Map.toList utxos'
-
-    -- then we mint using utxo
-    let val     = Value.singleton (stagedCurrency)
-                      (mpTokenName stagedPolicyParams)
-                      grabAmount
-                      -- (mpMaxAmount stagedPolicyParams)
-        lookups =  Prelude.mconcat [
-           Constraints.unspentOutputs utxos'
-          , Constraints.otherScript (Scripts.validatorScript fixedFaucetValidator)
-          -- "ConstraintResolutionError (ValidatorHashNotFound bf2a9c89a7323439d1eff913c0d93dd2a4e9a4040a03a18b8a16bb4c)"
---          , Constraints.otherScript validator
---         ,  Constraints.otherScript stagedPolicy
-         -- , Constraints.mintingPolicy stagedPolicy
-          , Constraints.mintingPolicy (Scripts.forwardingMintingPolicy fixedFaucetValidator)
-          , Constraints.typedValidatorLookups fixedFaucetValidator
-          ]
-        --tx :: TxConstraints (Scripts.RedeemerType ()) (Scripts.DatumType ())
-        --tx :: TxConstraints (Scripts.RedeemerType ()) (())
-        tx :: TxConstraints () FaucetDatum
-        tx      =
-            Constraints.mustMintValue val
-          <> Constraints.mustPayToTheScript lu (Ada.lovelaceValueOf grabAmount)
-            -- XX: same as
---            Constraints.mustMintCurrency vhash
---                      (mpTokenName stagedPolicyParams)
---                      66
-            <> Prelude.mconcat [
-             Constraints.mustSpendScriptOutput oref unitRedeemer
-            | oref <- orefs ]
---          , Constraints.mustPayToTheScript @Void () (Ada.lovelaceValueOf grabAmount)
---          ,
---            , Constraints.mustPayToTheScript () (Ada.lovelaceValueOf grabAmount)
---            , Constraints.mustPayToOtherScript fhash unitDatum (Ada.lovelaceValueOf grabAmount)
---            , Constraints.mustPayToOtherScript valHash unitDatum (Ada.lovelaceValueOf grabAmount)
---          , Constraints.mustPayToPubKey (scriptHashAddress validator)
---          ]
---    ledgerTx <- submitTxConstraintsWith @Void lookups tx
-    ledgerTx <- submitTxConstraintsWith @Faucet lookups tx
-    logInfo @String $ printf "ltx %s" (show ledgerTx)
-    void $ awaitTxConfirmed $ txId ledgerTx
-    logInfo @String $ printf "forged %s" (show val)
-
-    mutxos <- utxosAt (pubKeyHashAddress (pubKeyHash pk))
-    logInfo @String $ printf "myutxos %s" (show mutxos)
-    --}
-
 endpoints :: Contract () HelloSchema Text ()
 endpoints = forever $ selectList [ sayhello ]
 
 mkSchemaDefinitions ''HelloSchema
-
---mkKnownCurrencies []
